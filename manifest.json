@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "PyConsole",
+  "version": "1.0",
+  "description": "DevTools 패널에서 파이썬 코드를 실행합니다.",
+  "devtools_page": "devtools.html",
+  "permissions": []
+}
