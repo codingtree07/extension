@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      margin: 0;
+    }
+    h3 { margin-top: 0; color: #4ec9b0; }
+    textarea {
+      width: 100%;
+      height: 150px;
+      background-color: #2d2d2d;
+      color: #9cdcfe;
+      border: 1px solid #3c3c3c;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #0e639c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background-color: #1177bb; }
+    button:disabled { background-color: #555; cursor: not-allowed; }
+    #output {
+      margin-top: 15px;
+      white-space: pre-wrap;
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #1a1a1a;
+      padding: 10px;
+      border: 1px solid #333;
+      min-height: 50px;
+    }
+    .status { color: #ce9178; font-size: 12px; margin-bottom: 10px; }
+  </style>
+  <!-- 웹브라우저용 파이썬 환경 Pyodide 로드 -->
+  <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
+  <h3>PyConsole</h3>
+  <div id="status" class="status">파이썬 엔진을 초기화하는 중...</div>
+  
+  <textarea id="code" placeholder="이곳에 파이썬 코드를 입력하세요...&#10;예시:&#10;a = 10&#10;b = 20&#10;print(f'결과: {a + b}')"></textarea>
+  <br>
+  <button id="runBtn" disabled>Run Code</button>
+
+  <h4>Output:</h4>
+  <div id="output">엔진 로딩 완료 후 실행 가능합니다.</div>
+
+  <script>
+    const outputDiv = document.getElementById('output');
+    const statusDiv = document.getElementById('status');
+    const runBtn = document.getElementById('runBtn');
+    const codeArea = document.getElementById('code');
+    let pyodide = null;
+
+    // Pyodide 파이썬 엔진 초기화
+    async function initPyodide() {
+      try {
+        pyodide = await loadPyodide();
+        statusDiv.innerText = "파이썬 엔진 준비 완료!";
+        statusDiv.style.color = "#6a9955";
+        runBtn.disabled = false;
+        outputDiv.innerText = "코드를 입력하고 Run 버튼을 누르세요.";
+      } catch (err) {
+        statusDiv.innerText = "엔진 로드 실패: " + err.message;
+        statusDiv.style.color = "#f44336";
+      }
+    }
+
+    // 코드 실행 함수
+    async function runPython() {
+      const code = codeArea.value;
+      outputDiv.innerText = "실행 중...";
+      
+      // print() 출력을 잡아내기 위한 표준출력(stdout) 리디렉션 설정
+      let stdoutBuffer = "";
+      pyodide.setStdout({ batched: (str) => { stdoutBuffer += str + "\n"; } });
+      
+      try {
+        // 파이썬 코드 실행
+        let result = await pyodide.runPythonAsync(code);
+        
+        // 결과 출력 (print문 출력 내용 + 최종 리턴값)
+        let finalOutput = stdoutBuffer;
+        if (result !== undefined) {
+          finalOutput += `\n[Return Value]: ${result}`;
+        }
+        
+        outputDiv.innerText = finalOutput || "코드가 실행되었으나 출력된 결과가 없습니다.";
+        outputDiv.style.color = "#d4d4d4";
+      } catch (err) {
+        // 에러 발생 시 처리
+        outputDiv.innerText = err.message;
+        outputDiv.style.color = "#f44336";
+      }
+    }
+
+    runBtn.addEventListener('click', runPython);
+    initPyodide();
+  </script>
+</body>
+</html>
